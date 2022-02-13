@@ -1,0 +1,42 @@
+version: '3.3'
+
+services:
+  app:
+    container_name: ${NODE_CONTAINER_NAME}
+    restart: unless-stopped
+    build:
+      context: ../
+    env_file:
+      - ./.env
+    volumes:
+      - ../:/srv/app
+      - app_node_modules:/srv/app/node_modules
+    command: npx nodemon server.js
+    ports:
+      - ${NODE_LOCAL_PORT}:${NODE_DOCKER_PORT}
+    depends_on:
+      - rabbitmq
+    networks:
+      - default
+    links:
+      - rabbitmq
+
+  rabbitmq:
+    container_name: ${RABBITMQ_CONTAINER_NAME}
+    image: ${RABBITMQ_CONTAINER_IMAGE}
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - ${RABBITMQ_LOCAL_PORT}:${RABBITMQ_DOCKER_PORT}
+      - '15672:15672'
+    volumes:
+      - ../rabbitmq/data:/var/lib/rabbitmq/
+    networks:
+      - default
+
+networks:
+  default: null
+
+volumes:
+  app_node_modules: null
